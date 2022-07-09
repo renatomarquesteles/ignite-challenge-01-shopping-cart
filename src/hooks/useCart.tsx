@@ -42,14 +42,17 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       const { data: ProductData } = await api.get<Product>(
         `products/${productId}`
       );
+      const { data: StockData } = await api.get<Stock>(`stock/${productId}`);
 
       const productInTheCart = cart.find((product) => product.id === productId);
 
       if (!productInTheCart) {
-        updateCart([...cart, ProductData]);
+        if (StockData.amount >= 0) {
+          updateCart([...cart, { ...ProductData, amount: 1 }]);
+        } else {
+          toast.error('Quantidade solicitada fora de estoque');
+        }
       } else {
-        const { data: StockData } = await api.get<Stock>(`stock/${productId}`);
-
         if (StockData.amount >= productInTheCart.amount + 1) {
           const cartWithProductIncreasedAmount = cart.map((product) => {
             if (product.id === productId) {
