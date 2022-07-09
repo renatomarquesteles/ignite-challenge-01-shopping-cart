@@ -72,9 +72,9 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   const removeProduct = (productId: number) => {
     try {
-      // TODO
+      updateCart(cart.filter((product) => product.id !== productId));
     } catch {
-      // TODO
+      toast.error('Erro na remoção do produto');
     }
   };
 
@@ -83,9 +83,28 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      // TODO
+      const isProductInCart = cart.find((product) => product.id === productId);
+
+      if (!isProductInCart || amount <= 0) {
+        return;
+      }
+
+      const { data: StockData } = await api.get<Stock>(`stock/${productId}`);
+
+      if (StockData.amount < amount) {
+        toast.error('Quantidade solicitada fora de estoque');
+      }
+
+      const cartWithUpdatedProductAmount = cart.map((product) => {
+        if (product.id === productId) {
+          return { ...product, amount };
+        }
+        return product;
+      });
+
+      updateCart(cartWithUpdatedProductAmount);
     } catch {
-      // TODO
+      toast.error('Erro na alteração de quantidade do produto');
     }
   };
 
